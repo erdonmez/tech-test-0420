@@ -2,6 +2,19 @@
 
 A simple spreadsheet-like app built with React and ag-grid. Started as a basic table and evolved into something more interesting.
 
+## Prerequisites
+
+- Node.js 18.18.0+ or 20.9.0+ or 21.1.0+ ([Download here](https://nodejs.org/))
+- Yarn
+
+## Getting started
+
+```bash
+./dev.sh
+```
+
+That's it. The app will open at `localhost`.
+
 ## What it does
 
 - **Editable grid**: Click any cell to edit, just like a spreadsheet
@@ -9,15 +22,6 @@ A simple spreadsheet-like app built with React and ag-grid. Started as a basic t
 - **Real-time sync**: Open multiple tabs and see changes instantly across all of them
 - **Background computation**: Uses a Web Worker to handle data processing without blocking the UI
 - **Visual feedback**: Cells with negative values flash red for 3 seconds
-
-## Getting started
-
-```bash
-yarn
-yarn dev
-```
-
-That's it. The app will open at `localhost`.
 
 ## How it works
 
