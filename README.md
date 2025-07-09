@@ -23,6 +23,68 @@ That's it. The app will open at `localhost`.
 - **Background computation**: Uses a Web Worker to handle data processing without blocking the UI
 - **Visual feedback**: Cells with negative values flash red for 3 seconds
 
+## Instructions for Running and Testing
+
+### Running the Project
+
+```bash
+./dev.sh
+```
+
+This will install dependencies and start the development server.
+
+### Testing the Functionality
+
+**Testing Formulas:**
+
+- Type `=A1+B2` in any cell to see formula calculation
+- Try `=A1*2` or `=A1-B2` for other operations
+- Formulas update automatically when referenced cells change
+
+**Testing Multi-tab Sync:**
+
+- Open the app in two browser tabs
+- Edit a cell in one tab
+- See the change appear instantly in the other tab
+- Changes persist after page refresh
+
+**Testing Visual Feedback:**
+
+- Enter a negative number (like `-5`) in any cell
+- Watch the entire row flash red for 3 seconds
+- Works with both direct numbers and formula results
+
+## Important Decisions and Trade-offs
+
+**Web Worker for Formulas:**
+
+- Keeps UI responsive during calculations
+- Trade-off: More complex setup vs blocking main thread
+
+**localStorage for Sync:**
+
+- Simple, works across tabs instantly
+- Trade-off: Limited to same browser vs full websocket solution
+- Edge case: Could conflict if multiple users on same machine
+
+**Row Flashing Implementation:**
+
+- Flashes entire row vs just cell for better visibility
+- 3-second duration balances visibility vs distraction
+- Uses CSS animations for smooth effect
+
+**Formula Parsing:**
+
+- Simple left-to-right evaluation (no precedence)
+- Trade-off: Quick implementation vs full math parser
+- Handles basic cases within time constraints
+
+**Time Constraints:**
+
+- Prioritized core requirements over edge cases
+- Simple error handling (`#ERR` for invalid formulas)
+- Basic UI styling vs polished design system
+
 ## How it works
 
 The grid has 4 columns (A, B, C, D) and 10 rows. All cells are editable. When you change a value:
@@ -44,10 +106,6 @@ The grid has 4 columns (A, B, C, D) and 10 rows. All cells are editable. When yo
 
 - `src/App.tsx` - Main component with all the logic
 - `src/App.css` - Styles for the flash animation
-
-## Why this approach
-
-Originally just needed a working ag-grid table. Then added persistence to keep data. Then added the Worker because heavy computation was blocking the UI. The multi-tab comes with the localStorage setup.
 
 ## Tech Stack
 
