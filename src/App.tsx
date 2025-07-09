@@ -1,35 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+import { useState } from 'react';
+
+const columnDefs = [
+  { headerName: "A", field: "A" as const, flex: 1 },
+  { headerName: "B", field: "B" as const, flex: 1 },
+  { headerName: "C", field: "C" as const, flex: 1 },
+  { headerName: "D", field: "D" as const, flex: 1 }
+];
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [rowData, setRowData] = useState([
+    { A: '', B: '', C: '', D: '' },
+    { A: '', B: '', C: '', D: '' }
+  ]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div style={{
+      height: '100vh',
+      width: '100vw',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#f8f9fa',
+      padding: '20px',
+      boxSizing: 'border-box'
+    }}>
+      <div className="ag-theme-alpine" style={{
+        height: 'calc(100vh - 40px)',
+        width: 'calc(100vw - 40px)',
+        maxWidth: '1200px',
+        border: '1px solid #ddd',
+        borderRadius: '8px',
+        overflow: 'hidden'
+      }}>
+        <AgGridReact
+          rowData={rowData}
+          columnDefs={columnDefs}
+          defaultColDef={{
+            editable: true,
+            resizable: true,
+            sortable: true
+          }}
+          onCellValueChanged={params => {
+            const { rowIndex, colDef, newValue } = params;
+
+            if (colDef.field) {
+              setRowData(prev => {
+                const updated = [...prev];
+                updated[rowIndex] = { ...updated[rowIndex], [colDef.field]: newValue };
+                return updated;
+              });
+            }
+          }}
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
