@@ -31,37 +31,12 @@ function App() {
   });
 
   const [computedRows, setComputedRows] = useState(makeEmptyRows());
-  const [flashedCell, setFlashedCell] = useState<{
-    rowIndex: number;
-    field: string;
-  } | null>(null);
+  const [flashedRow, setFlashedRow] = useState<number | null>(null);
 
   const workerRef = useRef<Worker | null>(null);
 
   const FlashCell = React.memo((params) => {
-    const { value, colDef, node } = params;
-    const rowIndex = node.rowIndex;
-
-    useEffect(() => {
-      const isEdited =
-        flashedCell?.rowIndex === rowIndex &&
-        flashedCell?.field === colDef.field;
-      const shouldFlash =
-        isEdited &&
-        typeof value === 'string' &&
-        value.trim() &&
-        Number(value) < 0;
-
-      if (shouldFlash) {
-        params.node.setDataValue(colDef.field, value, {
-          cellClass: ['cell-flash-neg'],
-        });
-        setTimeout(() => {
-          params.node.setDataValue(colDef.field, value, { cellClass: [] });
-        }, 3000);
-      }
-    }, [value, colDef.field, rowIndex, flashedCell, params.node]);
-
+    const { value } = params;
     return <span className="cell-content">{value}</span>;
   });
 
@@ -90,6 +65,13 @@ function App() {
     return () => window.removeEventListener('storage', handler);
   }, []);
 
+  useEffect(() => {
+    if (flashedRow !== null) {
+      const timer = setTimeout(() => setFlashedRow(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [flashedRow]);
+
   const onCellValueChanged = useCallback((params) => {
     const { rowIndex, colDef, newValue } = params;
     if (colDef.field) {
@@ -97,6 +79,14 @@ function App() {
         const updated = [...prev];
         updated[rowIndex] = { ...updated[rowIndex], [colDef.field]: newValue };
         workerRef.current?.postMessage({ rawData: updated });
+        setComputedRows((prev) => {
+          const updatedComputed = [...prev];
+          updatedComputed[rowIndex] = {
+            ...updatedComputed[rowIndex],
+            [colDef.field]: newValue,
+          };
+          return updatedComputed;
+        });
         return updated;
       });
 
@@ -105,13 +95,14 @@ function App() {
         newValue.trim() &&
         Number(newValue) < 0
       ) {
-        setFlashedCell({ rowIndex, field: colDef.field });
-        setTimeout(() => {
-          setFlashedCell(null);
-        }, 3000);
+        setFlashedRow(rowIndex);
       }
     }
   }, []);
+
+  const getRowClass = (params) => {
+    return flashedRow === params.node.rowIndex ? ['row-flash-neg'] : [];
+  };
 
   const columnDefs = COLS.map((col) => ({
     headerName: col,
@@ -119,17 +110,6 @@ function App() {
     flex: 1,
     valueGetter: (params) => computedRows[params.node.rowIndex]?.[col] ?? '',
     cellRenderer: FlashCell,
-    cellClass: (params) => {
-      const isEdited =
-        flashedCell?.rowIndex === params.node.rowIndex &&
-        flashedCell?.field === params.colDef.field;
-      const shouldFlash =
-        isEdited &&
-        typeof params.value === 'string' &&
-        params.value.trim() &&
-        Number(params.value) < 0;
-      return shouldFlash ? ['cell-flash-neg'] : [];
-    },
   }));
 
   return (
@@ -165,6 +145,7 @@ function App() {
             sortable: true,
           }}
           onCellValueChanged={onCellValueChanged}
+          getRowClass={getRowClass}
         />
       </div>
     </div>

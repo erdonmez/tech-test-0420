@@ -1,13 +1,14 @@
-.cell-flash-neg {
-  animation: flashNegative 3s ease-in-out;
+.row-flash-neg {
+  animation: rowflashneg 3s;
 }
-
-@keyframes flashNegative {
-  0% {
-    background-color: rgb(255, 0, 0);
+@keyframes rowflashneg {
+  from {
+    background: #ffd3d3;
   }
-
-  100% {
-    background-color: transparent;
+  50% {
+    background: #ff7272;
+  }
+  to {
+    background: transparent;
   }
 }
