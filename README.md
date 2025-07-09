@@ -1,69 +1,53 @@
-# React + TypeScript + Vite
+# AG Grid React App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple spreadsheet-like app built with React and ag-grid. Started as a basic table and evolved into something more interesting.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Editable grid**: Click any cell to edit, just like a spreadsheet
+- **Persistent data**: Your changes are saved to localStorage automatically
+- **Real-time sync**: Open multiple tabs and see changes instantly across all of them
+- **Background computation**: Uses a Web Worker to handle data processing without blocking the UI
+- **Visual feedback**: Cells with negative values flash red for 3 seconds
 
-## Expanding the ESLint configuration
+## Getting started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+yarn
+yarn dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+That's it. The app will open at `localhost`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## How it works
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+The grid has 4 columns (A, B, C, D) and 10 rows. All cells are editable. When you change a value:
+
+1. Raw data gets saved to localStorage
+2. A Web Worker processes the data in the background
+3. The grid updates with computed values
+4. Other browser tabs get notified via storage events
+
+## Technical stuff
+
+- React 18 with TypeScript
+- ag-grid-community for the table
+- Web Worker for background processing
+- localStorage for persistence
+- CSS animations for the flashing effect
+
+## Files
+
+- `src/App.tsx` - Main component with all the logic
+- `src/App.css` - Styles for the flash animation
+
+## Why this approach
+
+Originally just needed a working ag-grid table. Then added persistence to keep data. Then added the Worker because heavy computation was blocking the UI. The multi-tab comes with the localStorage setup.
+
+## Tech Stack
+
+- Vite for fast development
+- React + TypeScript
+- ag-grid-community
+- Web Workers for background processing
