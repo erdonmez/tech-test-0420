@@ -1,3 +1,74 @@
+body,
+html,
+#root {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #e0e7ff 0%, #fef6f9 80%);
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  height: 100%;
+}
+
+.app-bg {
+  min-height: 100vh;
+  min-width: 100vw;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spreadsheet-wrapper {
+  width: 100%;
+  max-width: 900px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  box-shadow: 0 4px 32px #837ffb28;
+  border: 1px solid #dad1f8;
+  padding-bottom: 24px;
+  min-width: 350px;
+  margin: 24px;
+  backdrop-filter: blur(3px);
+}
+
+.sheet-title {
+  padding: 22px 0 10px 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: 0.03em;
+  color: #23282e;
+  background: transparent;
+  position: relative;
+}
+
+.sheet-title::before {
+  content: '';
+  display: block;
+  width: 54px;
+  height: 5px;
+  margin: 0 auto 12px auto;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #7f8fff, #fc7fa8 80%);
+}
+
+.spreadsheet-grid {
+  width: 100%;
+  max-width: 900px;
+  min-width: 320px;
+  height: 420px;
+  max-height: 500px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.cell-content {
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  padding: 2px 8px;
+}
+
 .row-flash-neg {
   animation: rowflashneg 3s;
 }
@@ -11,4 +82,37 @@
   to {
     background: transparent;
   }
+}
+
+/* Mobile tweaks */
+@media (max-width: 600px) {
+  .spreadsheet-wrapper,
+  .spreadsheet-grid {
+    max-width: 98vw;
+    min-width: 0;
+    height: 65vw;
+    max-height: 80vw;
+  }
+  .sheet-title {
+    font-size: 1.2rem;
+    padding: 10px 0 4px 0;
+  }
+}
+
+.clear-btn {
+  background: linear-gradient(90deg, #fc7fa8 10%, #7f8fff 90%);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 22px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #7f8fff30;
+  transition: box-shadow 0.15s;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+.clear-btn:hover {
+  box-shadow: 0 4px 16px #fc7fa828;
+  opacity: 0.95;
 }

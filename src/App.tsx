@@ -20,31 +20,20 @@ function makeEmptyRows() {
 function App() {
   const [rawData, setRawData] = useState(() => {
     const saved = localStorage.getItem('jsonRawData');
-    return saved
-      ? JSON.parse(saved)
-      : Array.from({ length: NUM_ROWS }, () =>
-          COLS.reduce(
-            (acc, c) => ({ ...acc, [c]: '' }),
-            {} as Record<string, string>
-          )
-        );
+    return saved ? JSON.parse(saved) : makeEmptyRows();
   });
 
   const [computedRows, setComputedRows] = useState(makeEmptyRows());
   const [flashedRow, setFlashedRow] = useState<number | null>(null);
-
   const workerRef = useRef<Worker | null>(null);
 
-  const FlashCell = React.memo((params) => {
-    const { value } = params;
-    return <span className="cell-content">{value}</span>;
-  });
+  const FlashCell = React.memo((params) => (
+    <span className="cell-content">{params.value}</span>
+  ));
 
   useEffect(() => {
     workerRef.current = new Worker('/worker.js');
-    workerRef.current.onmessage = (e) => {
-      setComputedRows(e.data.result);
-    };
+    workerRef.current.onmessage = (e) => setComputedRows(e.data.result);
     workerRef.current.postMessage({ rawData });
     return () => workerRef.current?.terminate();
   }, []);
@@ -72,37 +61,32 @@ function App() {
     }
   }, [flashedRow]);
 
-  const onCellValueChanged = useCallback((params) => {
-    const { rowIndex, colDef, newValue } = params;
-    if (colDef.field) {
-      setRawData((prev) => {
-        const updated = [...prev];
-        updated[rowIndex] = { ...updated[rowIndex], [colDef.field]: newValue };
-        workerRef.current?.postMessage({ rawData: updated });
-        setComputedRows((prev) => {
-          const updatedComputed = [...prev];
-          updatedComputed[rowIndex] = {
-            ...updatedComputed[rowIndex],
+  const onCellValueChanged = useCallback(
+    (params) => {
+      const { rowIndex, colDef, newValue } = params;
+      if (colDef.field) {
+        setRawData((prev) => {
+          const updated = [...prev];
+          updated[rowIndex] = {
+            ...updated[rowIndex],
             [colDef.field]: newValue,
           };
-          return updatedComputed;
+          workerRef.current?.postMessage({ rawData: updated });
+          return updated;
         });
-        return updated;
-      });
 
-      if (
-        typeof newValue === 'string' &&
-        newValue.trim() &&
-        Number(newValue) < 0
-      ) {
-        setFlashedRow(rowIndex);
+        setTimeout(() => {
+          const vals = computedRows[rowIndex] || {};
+          const hasNegative = COLS.some((c) => Number(vals[c]) < 0);
+          if (hasNegative) setFlashedRow(rowIndex);
+        }, 100);
       }
-    }
-  }, []);
+    },
+    [computedRows]
+  );
 
-  const getRowClass = (params) => {
-    return flashedRow === params.node.rowIndex ? ['row-flash-neg'] : [];
-  };
+  const getRowClass = (params) =>
+    flashedRow === params.node.rowIndex ? ['row-flash-neg'] : [];
 
   const columnDefs = COLS.map((col) => ({
     headerName: col,
@@ -113,40 +97,45 @@ function App() {
   }));
 
   return (
-    <div
-      style={{
-        height: '100vh',
-        width: '100vw',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f8f9fa',
-        padding: '20px',
-        boxSizing: 'border-box',
-      }}
-    >
-      <div
-        className="ag-theme-alpine"
-        style={{
-          height: 'calc(100vh - 40px)',
-          width: 'calc(100vw - 40px)',
-          maxWidth: '1200px',
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          overflow: 'hidden',
-        }}
-      >
-        <AgGridReact
-          rowData={computedRows}
-          columnDefs={columnDefs}
-          defaultColDef={{
-            editable: true,
-            resizable: true,
-            sortable: true,
+    <div className="app-bg">
+      <div className="spreadsheet-wrapper">
+        <div className="sheet-title">Live Spreadsheet Demo</div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            padding: '0 12px 8px 0',
           }}
-          onCellValueChanged={onCellValueChanged}
-          getRowClass={getRowClass}
-        />
+        >
+          <button
+            className="clear-btn"
+            onClick={() => {
+              setRawData(makeEmptyRows());
+              setComputedRows(makeEmptyRows());
+              localStorage.removeItem('jsonRawData');
+            }}
+          >
+            Clear Data
+          </button>
+        </div>
+
+        <div className="ag-theme-alpine spreadsheet-grid">
+          <AgGridReact
+            rowData={computedRows}
+            columnDefs={columnDefs}
+            defaultColDef={{
+              editable: true,
+              resizable: true,
+              sortable: true,
+              filter: false,
+              flex: 1,
+              minWidth: 80,
+              cellClass: 'cell-content',
+            }}
+            onCellValueChanged={onCellValueChanged}
+            getRowClass={getRowClass}
+          />
+        </div>
       </div>
     </div>
   );
