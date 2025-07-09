@@ -23,7 +23,14 @@ const columnDefs = COLS.map(col => ({
 }));
 
 function App() {
-  const [rawData, setRawData] = useState(makeEmptyRows());
+  const [rawData, setRawData] = useState(() => {
+    const saved = localStorage.getItem('jsonRawData');
+    return saved
+      ? JSON.parse(saved)
+      : Array.from({ length: NUM_ROWS }, () =>
+        COLS.reduce((acc, c) => ({ ...acc, [c]: '' }), {} as Record<string, string>)
+      );
+  });
   const [computedRows, setComputedRows] = useState(makeEmptyRows());
   const workerRef = useRef<Worker | null>(null);
 
@@ -32,6 +39,22 @@ function App() {
     workerRef.current.onmessage = (e) => setComputedRows(e.data.result);
     workerRef.current.postMessage({ rawData });
     return () => workerRef.current?.terminate();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('jsonRawData', JSON.stringify(rawData));
+  }, [rawData]);
+
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'jsonRawData' && e.newValue) {
+        const incoming = JSON.parse(e.newValue);
+        setRawData(incoming);
+        workerRef.current?.postMessage({ rawData: incoming });
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
   }, []);
 
   const onCellValueChanged = useCallback((params) => {
