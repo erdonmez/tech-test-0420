@@ -4,7 +4,7 @@ A simple spreadsheet-like app built with React and ag-grid. Started as a basic t
 
 ## Prerequisites
 
-- Node.js 18.18.0+ or 20.9.0+ or 21.1.0+ ([Download here](https://nodejs.org/))
+- Node.js 20.9.0+ or 21.1.0+ ([Download here](https://nodejs.org/))
 - Yarn
 
 ## Getting started
