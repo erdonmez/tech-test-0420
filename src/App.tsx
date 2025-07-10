@@ -1,15 +1,25 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
+import type {
+  CellValueChangedEvent,
+  ValueGetterParams,
+  RowClassParams,
+} from 'ag-grid-community';
 
-import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import './App.css';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const COLS = ['A', 'B', 'C', 'D'] as const;
-const NUM_ROWS = 10;
+const NUM_ROWS = 8;
+
+type RowData = Record<string, string>;
+
+interface CellRendererParams {
+  value: string;
+}
 
 function makeEmptyRows() {
   return Array.from({ length: NUM_ROWS }, () =>
@@ -25,9 +35,10 @@ function App() {
 
   const [computedRows, setComputedRows] = useState(makeEmptyRows());
   const [flashedRow, setFlashedRow] = useState<number | null>(null);
+  const [lastEditedRow, setLastEditedRow] = useState<number | null>(null);
   const workerRef = useRef<Worker | null>(null);
 
-  const FlashCell = React.memo((params) => (
+  const FlashCell = React.memo((params: CellRendererParams) => (
     <span className="cell-content">{params.value}</span>
   ));
 
@@ -55,44 +66,46 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (flashedRow !== null) {
-      const timer = setTimeout(() => setFlashedRow(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [flashedRow]);
-
-  const onCellValueChanged = useCallback(
-    (params) => {
-      const { rowIndex, colDef, newValue } = params;
-      if (colDef.field) {
-        setRawData((prev) => {
-          const updated = [...prev];
-          updated[rowIndex] = {
-            ...updated[rowIndex],
-            [colDef.field]: newValue,
-          };
-          workerRef.current?.postMessage({ rawData: updated });
-          return updated;
-        });
-
-        setTimeout(() => {
-          const vals = computedRows[rowIndex] || {};
-          const hasNegative = COLS.some((c) => Number(vals[c]) < 0);
-          if (hasNegative) setFlashedRow(rowIndex);
-        }, 100);
+    if (lastEditedRow !== null) {
+      const vals = computedRows[lastEditedRow] || {};
+      const hasNegative = COLS.some((c) => Number(vals[c]) < 0);
+      if (hasNegative) {
+        setFlashedRow(lastEditedRow);
+        const timer = setTimeout(() => setFlashedRow(null), 600);
+        return () => clearTimeout(timer);
       }
-    },
-    [computedRows]
-  );
+    }
+  }, [computedRows, lastEditedRow]);
 
-  const getRowClass = (params) =>
+  const onCellValueChanged = useCallback((params: CellValueChangedEvent) => {
+    const { rowIndex, colDef, newValue } = params;
+    if (colDef.field && rowIndex !== null) {
+      setLastEditedRow(rowIndex);
+      setRawData((prev: RowData[]) => {
+        const updated = [...prev];
+        updated[rowIndex] = {
+          ...updated[rowIndex],
+          [colDef.field!]: newValue,
+        };
+        workerRef.current?.postMessage({ rawData: updated });
+        return updated;
+      });
+    }
+  }, []);
+
+  const getRowClass = (params: RowClassParams) =>
     flashedRow === params.node.rowIndex ? ['row-flash-neg'] : [];
 
   const columnDefs = COLS.map((col) => ({
     headerName: col,
     field: col,
     flex: 1,
-    valueGetter: (params) => computedRows[params.node.rowIndex]?.[col] ?? '',
+    valueGetter: (params: ValueGetterParams) => {
+      const rowIndex = params.node?.rowIndex;
+      return rowIndex !== null && rowIndex !== undefined
+        ? computedRows[rowIndex]?.[col] ?? ''
+        : '';
+    },
     cellRenderer: FlashCell,
   }));
 
